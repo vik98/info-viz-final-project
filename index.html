@@ -6,6 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tween.js/18.6.4/tween.umd.js"></script>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+
     <title>ai impact visualization</title>
     <style>
         * {
@@ -300,6 +302,51 @@
             scroll-snap-align: start;
             scroll-snap-stop: always;
         }
+
+        #skillsGalaxy {
+            width: 100%;
+            height: 60vh;
+            min-height: 400px;
+            background: transparent;
+            margin: 0 auto;
+            display: block;
+        }
+
+        .skill-node {
+            cursor: pointer;
+            stroke: #000;
+            stroke-width: 2px;
+            transition: filter 0.2s;
+            filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.08));
+        }
+
+        .skill-node:hover {
+            filter: drop-shadow(0 4px 16px rgba(0, 0, 0, 0.18));
+        }
+
+        .skill-label {
+            font-family: inherit;
+            font-size: 1.1rem;
+            fill: #111;
+            text-anchor: middle;
+            pointer-events: none;
+            font-weight: 500;
+        }
+
+        .skill-desc {
+            font-family: inherit;
+            font-size: 1rem;
+            fill: #333;
+            text-align: center;
+            margin-top: 1rem;
+            min-height: 2.5em;
+            transition: opacity 0.3s;
+            opacity: 0;
+        }
+
+        .skill-desc.active {
+            opacity: 1;
+        }
     </style>
 </head>
 
@@ -347,7 +394,7 @@
             </div>
         </div>
 
-        <div class="section" id="skillsSection">
+        <!-- <div class="section" id="skillsSection">
             <h2>Essential Skills for Future-Proofing Your Career</h2>
             <div class="skills-grid">
                 <div class="skill-card">
@@ -371,6 +418,12 @@
                     <p>Understand and work alongside AI tools</p>
                 </div>
             </div>
+        </div> -->
+
+        <div class="section" id="skillsSection">
+            <h2>Essential Skills for Future-Proofing Your Career</h2>
+            <svg id="skillsGalaxy"></svg>
+            <div id="skillDesc" class="skill-desc"></div>
         </div>
 
         <div class="section" id="factsSection">
@@ -614,6 +667,106 @@
             currentSection = 2;
             document.getElementById('skillsSection').scrollIntoView({ behavior: 'smooth' });
         }
+        const skillsData = [
+            { icon: "🤝", name: "Emotional Intelligence", desc: "Build strong relationships and understand human needs." },
+            { icon: "💡", name: "Creative Problem Solving", desc: "Think outside the box and innovate solutions." },
+            { icon: "🔄", name: "Adaptability", desc: "Embrace change and learn continuously." },
+            { icon: "🤖", name: "AI Literacy", desc: "Understand and work alongside AI tools." },
+            { icon: "🧠", name: "Critical Thinking", desc: "Analyze situations and make informed decisions." },
+            { icon: "🗣️", name: "Communication", desc: "Express ideas clearly and collaborate effectively." },
+            { icon: "🕸️", name: "Digital Networking", desc: "Leverage online platforms for professional growth." }
+        ];
+
+        function renderSkillsGalaxy() {
+            // Remove any previous SVG
+            d3.select("#skillsGalaxy").selectAll("*").remove();
+
+            // Get actual container width
+            const container = document.getElementById('skillsGalaxy');
+            const width = container.clientWidth || 2000;
+            const height = container.clientHeight || 2000;
+
+            const svg = d3.select("#skillsGalaxy")
+                .attr("width", width)
+                .attr("height", height);
+
+            const simulation = d3.forceSimulation(skillsData)
+                .force("charge", d3.forceManyBody().strength(-120)) // less repulsion
+                .force("center", d3.forceCenter(width / 2, height / 2))
+                .force("collision", d3.forceCollide().radius(45)) // slightly larger than circle radius
+                .on("tick", ticked);
+
+            const node = svg.selectAll("g")
+                .data(skillsData)
+                .enter()
+                .append("g")
+                .attr("class", "skill-node")
+                .call(d3.drag()
+                    .on("start", dragstarted)
+                    .on("drag", dragged)
+                    .on("end", dragended)
+                )
+                .on("mouseover", function (e, d) {
+                    d3.select(this).select("circle").attr("fill", "#000");
+                    d3.select(this).select("text").attr("fill", "#fff");
+                    showDesc(d);
+                })
+                .on("mouseout", function (e, d) {
+                    d3.select(this).select("circle").attr("fill", "#fff");
+                    d3.select(this).select("text").attr("fill", "#111");
+                    hideDesc();
+                });
+
+            node.append("circle")
+                .attr("r", 38)
+                .attr("fill", "#fff");
+
+            node.append("text")
+                .attr("y", 8)
+                .attr("font-size", "2rem")
+                .attr("text-anchor", "middle")
+                .text(d => d.icon);
+
+            node.append("text")
+                .attr("class", "skill-label")
+                .attr("y", 70)
+                .text(d => d.name);
+
+            function ticked() {
+                node.attr("transform", d => `translate(${d.x},${d.y})`);
+            }
+
+            function dragstarted(event, d) {
+                if (!event.active) simulation.alphaTarget(0.1).restart();
+                d.fx = d.x;
+                d.fy = d.y;
+            }
+            function dragged(event, d) {
+                d.fx = event.x;
+                d.fy = event.y;
+            }
+            function dragended(event, d) {
+                if (!event.active) simulation.alphaTarget(0);
+                d.fx = null;
+                d.fy = null;
+            }
+
+            function showDesc(d) {
+                const desc = document.getElementById('skillDesc');
+                desc.textContent = d.desc;
+                desc.classList.add('active');
+            }
+            function hideDesc() {
+                const desc = document.getElementById('skillDesc');
+                desc.classList.remove('active');
+            }
+        }
+
+        renderSkillsGalaxy();
+
+        window.addEventListener('resize', () => {
+            renderSkillsGalaxy();
+        });
     </script>
 </body>
 
