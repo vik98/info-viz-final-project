@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ai impact visualization</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            color: #000;
+        }
+
+        body {
+            background: linear-gradient(135deg, #fff 0%, #f5f5f5 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 5% 5%;
+        }
+
+        .container {
+            max-width: 800px;
+            width: 100%;
+        }
+
+        h1 {
+            font-size: 2rem;
+            font-weight: 300;
+            margin-bottom: 2rem;
+            letter-spacing: -0.5px;
+        }
+
+        .search-container {
+            position: relative;
+            margin-bottom: 4rem;
+        }
+
+        input {
+            width: 100%;
+            padding: 1rem 0;
+            font-size: 1.2rem;
+            background: transparent;
+            border: none;
+            border-bottom: 1px solid #000;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        input:focus {
+            border-color: #333;
+        }
+
+        .search-results {
+            position: absolute;
+            width: 100%;
+            max-height: 300px;
+            overflow-y: auto;
+            background: white;
+            border: 1px solid #eee;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            z-index: 10;
+            display: none;
+        }
+
+        .search-results.active {
+            display: block;
+        }
+
+        .result-item {
+            padding: 0.8rem 1rem;
+            cursor: pointer;
+            transition: background 0.2s ease;
+        }
+
+        .result-item:hover {
+            background: #f9f9f9;
+        }
+
+        .gauge-container {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 2rem;
+        }
+
+        .gauge {
+            width: 100%;
+            max-width: 500px;
+            height: 250px;
+            position: relative;
+        }
+
+        .gauge-bg {
+            fill: none;
+            stroke: #eee;
+            stroke-width: 25;
+        }
+
+        .gauge-fill {
+            fill: none;
+            stroke: #000;
+            stroke-width: 25;
+            stroke-linecap: round;
+            transition: stroke-dasharray 0.8s ease;
+        }
+
+        .gauge-center {
+            fill: #fff;
+            stroke: #f0f0f0;
+            stroke-width: 1;
+        }
+
+        .gauge-percentage {
+            font-size: 2.5rem;
+            font-weight: 300;
+            text-align: center;
+            margin-top: 1rem;
+        }
+
+        .job-title {
+            font-size: 1.2rem;
+            text-align: center;
+            margin-bottom: 2rem;
+            font-weight: 400;
+        }
+
+        .instructions {
+            margin-top: 3rem;
+            color: #999;
+            text-align: center;
+            font-size: 0.9rem;
+        }
+
+        .no-results {
+            padding: 1rem;
+            text-align: center;
+            color: #999;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>ai impact on job roles</h1>
+
+        <div class="search-container">
+            <input type="text" id="search" placeholder="search for a job role...">
+            <div class="search-results" id="searchResults">
+                <!-- Results will be populated here -->
+            </div>
+        </div>
+
+        <div class="job-title" id="jobTitle">select a job role to see ai impact</div>
+
+        <div class="gauge-container">
+            <svg class="gauge" viewBox="0 0 200 100">
+                <path class="gauge-bg" d="M20 100 A 80 80 0 0 1 180 100" />
+                <path id="gaugeFill" class="gauge-fill" d="M20 100 A 80 80 0 0 1 180 100" stroke-dasharray="0 251.2" />
+                <circle class="gauge-center" cx="100" cy="100" r="60" />
+            </svg>
+            <div class="gauge-percentage" id="percentage">0%</div>
+        </div>
+
+        <p class="instructions">type a job role to see the estimated ai impact percentage</p>
+        <tableau-viz id='tableau-viz'
+            src='https://10ay.online.tableau.com/t/vikramsinghrathod-e1c967dc0b/views/InfoViz/Avgremainssame'
+            width='1728' height='952' hide-tabs toolbar='bottom'></tableau-viz>
+        <tableau-viz id='tableau-viz'
+            src='https://10ay.online.tableau.com/t/vikramsinghrathod-e1c967dc0b/views/InfoViz-2/Sheet2' width='1728'
+            height='952' hide-tabs toolbar='bottom'></tableau-viz>
+        <tableau-viz id='tableau-viz'
+            src='https://10ay.online.tableau.com/t/vikramsinghrathod-e1c967dc0b/views/InfoViz-2/Sheet3' width='1728'
+            height='952' hide-tabs toolbar='bottom'></tableau-viz>
+        <tableau-viz id='tableau-viz'
+            src='https://10ay.online.tableau.com/t/vikramsinghrathod-e1c967dc0b/views/InfoViz-2/Sheet4' width='1728'
+            height='952' hide-tabs toolbar='bottom'></tableau-viz>
+    </div>
+    <script type='module'
+        src='https://10ay.online.tableau.com/javascripts/api/tableau.embedding.3.latest.min.js'></script>
+    <script>
+        // Job roles and their AI impact percentages
+        // Needs to be replaced by the data in the ai_job_impact.json file
+        let jobData = [
+            { role: "software developer", impact: 78 },
+            { role: "data scientist", impact: 65 },
+            { role: "graphic designer", impact: 43 },
+            { role: "accountant", impact: 85 },
+            { role: "translator", impact: 90 },
+            { role: "customer service representative", impact: 72 },
+            { role: "content writer", impact: 62 },
+            { role: "marketing specialist", impact: 40 },
+            { role: "teacher", impact: 37 },
+            { role: "doctor", impact: 23 },
+            { role: "lawyer", impact: 44 },
+            { role: "chef", impact: 15 },
+            { role: "truck driver", impact: 67 },
+            { role: "retail salesperson", impact: 47 },
+            { role: "nurse", impact: 19 },
+            { role: "construction worker", impact: 35 },
+            { role: "project manager", impact: 54 },
+            { role: "financial analyst", impact: 71 },
+            { role: "ux designer", impact: 52 },
+            { role: "hr specialist", impact: 58 }
+        ];
+
+        fetch('ai_job_impact.json')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to load job data');
+                }
+                return response.json();
+            })
+            .then(data => {
+                jobData = data;
+
+                // Optionally, you can log the data to verify it's loaded correctly
+                console.log('Job data loaded:', jobData);
+            })
+            .catch(error => {
+                console.error('Error loading job data:', error);
+            });
+
+        const searchInput = document.getElementById('search');
+        const searchResults = document.getElementById('searchResults');
+        const jobTitle = document.getElementById('jobTitle');
+        const percentage = document.getElementById('percentage');
+        const gaugeFill = document.getElementById('gaugeFill');
+
+        // Total length of the gauge path
+        const gaugePathLength = 251.2;
+
+        // Set up search functionality
+        searchInput.addEventListener('input', () => {
+            const query = searchInput.value.toLowerCase().trim();
+
+            if (query === '') {
+                searchResults.classList.remove('active');
+                return;
+            }
+
+            // Filter job roles based on search query
+            const filteredJobs = jobData.filter(job =>
+                job.role.toLowerCase().includes(query)
+            );
+
+            // Display search results
+            renderSearchResults(filteredJobs);
+        });
+
+        // Focus and blur events to handle search results visibility
+        searchInput.addEventListener('focus', () => {
+            if (searchInput.value.trim() !== '') {
+                searchResults.classList.add('active');
+            }
+        });
+
+        // Close search results when clicking elsewhere
+        document.addEventListener('click', (e) => {
+            if (!searchInput.contains(e.target) && !searchResults.contains(e.target)) {
+                searchResults.classList.remove('active');
+            }
+        });
+
+        function renderSearchResults(jobs) {
+            searchResults.innerHTML = '';
+
+            if (jobs.length === 0) {
+                searchResults.innerHTML = '<div class="no-results">no matching job roles found</div>';
+                searchResults.classList.add('active');
+                return;
+            }
+
+            jobs.forEach(job => {
+                const resultItem = document.createElement('div');
+                resultItem.classList.add('result-item');
+                resultItem.textContent = job.role;
+
+                resultItem.addEventListener('click', () => {
+                    selectJob(job);
+                    searchResults.classList.remove('active');
+                });
+
+                searchResults.appendChild(resultItem);
+            });
+
+            searchResults.classList.add('active');
+        }
+
+        function selectJob(job) {
+            searchInput.value = job.role;
+            jobTitle.textContent = job.role;
+
+            // Animate percentage counter
+            animatePercentage(job.impact);
+
+            // Set gauge fill
+            const dashArray = (job.impact / 100) * gaugePathLength;
+            gaugeFill.style.strokeDasharray = `${dashArray} ${gaugePathLength}`;
+        }
+
+        function animatePercentage(targetValue) {
+            const duration = 1500;
+            const frameRate = 60;
+            const totalFrames = duration * frameRate / 1000;
+            const currentValue = parseInt(percentage.textContent) || 0;
+            const valueIncrement = (targetValue - currentValue) / totalFrames;
+            let currentFrame = 0;
+
+            const animate = () => {
+                currentFrame++;
+                const newValue = currentValue + valueIncrement * currentFrame;
+                percentage.textContent = `${Math.round(newValue)}%`;
+
+                if (currentFrame < totalFrames) {
+                    requestAnimationFrame(animate);
+                }
+            };
+
+            requestAnimationFrame(animate);
+        }
+    </script>
+</body>
+
+</html>
