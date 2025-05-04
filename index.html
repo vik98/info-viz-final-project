@@ -4,6 +4,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tween.js/18.6.4/tween.umd.js"></script>
     <title>ai impact visualization</title>
     <style>
         * {
@@ -142,33 +144,258 @@
             text-align: center;
             color: #999;
         }
+
+        .scroll-prompt {
+            text-align: center;
+            margin-top: 2rem;
+            color: #999;
+            cursor: pointer;
+            animation: bounce 2s infinite;
+        }
+
+        @keyframes bounce {
+
+            0%,
+            20%,
+            50%,
+            80%,
+            100% {
+                transform: translateY(0);
+            }
+
+            40% {
+                transform: translateY(-20px);
+            }
+
+            60% {
+                transform: translateY(-10px);
+            }
+        }
+
+        .section {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+
+        .choice-buttons {
+            display: flex;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .choice-button {
+            padding: 1rem 2rem;
+            border: 1px solid #000;
+            background: transparent;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .choice-button:hover {
+            background: #000;
+            color: #fff;
+        }
+
+        .skills-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            margin-top: 3rem;
+            width: 100%;
+            max-width: 1200px;
+        }
+
+        .skill-card {
+            border: 1px solid #eee;
+            padding: 2rem;
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+
+        .skill-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .skill-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .fact-container {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            height: 400px;
+            margin: 2rem 0;
+        }
+
+        .fact-card {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+
+        .fact-card.active {
+            opacity: 1;
+        }
+
+        .fact-button {
+            padding: 1rem 2rem;
+            border: 1px solid #000;
+            background: transparent;
+            cursor: pointer;
+            margin-top: 2rem;
+            transition: all 0.3s ease;
+        }
+
+        .fact-button:hover {
+            background: #000;
+            color: #fff;
+        }
+
+        html {
+            scroll-snap-type: y mandatory;
+            scroll-behavior: smooth;
+        }
+
+        body {
+            background: linear-gradient(135deg, #fff 0%, #f5f5f5 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 5% 5%;
+            overflow-x: hidden;
+        }
+
+        .section {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            scroll-snap-align: start;
+            scroll-snap-stop: always;
+        }
+
+        /* Add a wrapper for the first section */
+        .hero-section {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            scroll-snap-align: start;
+            scroll-snap-stop: always;
+        }
     </style>
 </head>
 
 <body>
     <div class="container">
-        <h1>ai impact on job roles</h1>
+        <div class="hero-section">
+            <h1>ai impact on job roles</h1>
 
-        <div class="search-container">
-            <input type="text" id="search" placeholder="search for a job role...">
-            <div class="search-results" id="searchResults">
-                <!-- Results will be populated here -->
+            <div class="search-container">
+                <input type="text" id="search" placeholder="search for a job role...">
+                <div class="search-results" id="searchResults">
+                    <!-- Results will be populated here -->
+                </div>
+            </div>
+
+            <div class="job-title" id="jobTitle">select a job role to see ai impact</div>
+
+            <div class="gauge-container">
+                <svg class="gauge" viewBox="0 0 200 100">
+                    <path class="gauge-bg" d="M20 100 A 80 80 0 0 1 180 100" />
+                    <path id="gaugeFill" class="gauge-fill" d="M20 100 A 80 80 0 0 1 180 100"
+                        stroke-dasharray="0 251.2" />
+                    <circle class="gauge-center" cx="100" cy="100" r="60" />
+                </svg>
+                <div class="gauge-percentage" id="percentage">0%</div>
+            </div>
+
+            <p class="instructions">type a job role to see the estimated ai impact percentage</p>
+
+            <!-- added to show space -->
+            <div class="search-container">
+            </div>
+
+            <div class="scroll-prompt">
+                <p>Scroll to explore more</p>
+                <span>↓</span>
             </div>
         </div>
 
-        <div class="job-title" id="jobTitle">select a job role to see ai impact</div>
-
-        <div class="gauge-container">
-            <svg class="gauge" viewBox="0 0 200 100">
-                <path class="gauge-bg" d="M20 100 A 80 80 0 0 1 180 100" />
-                <path id="gaugeFill" class="gauge-fill" d="M20 100 A 80 80 0 0 1 180 100" stroke-dasharray="0 251.2" />
-                <circle class="gauge-center" cx="100" cy="100" r="60" />
-            </svg>
-            <div class="gauge-percentage" id="percentage">0%</div>
+        <div class="section" id="choiceSection">
+            <h2>Are you concerned about AI's impact on your role?</h2>
+            <div class="choice-buttons">
+                <button class="choice-button" onclick="showSkills()">Yes, I am</button>
+                <button class="choice-button" onclick="showSkills()">No, I'm not</button>
+            </div>
         </div>
 
-        <p class="instructions">type a job role to see the estimated ai impact percentage</p>
-        <tableau-viz id='tableau-viz'
+        <div class="section" id="skillsSection">
+            <h2>Essential Skills for Future-Proofing Your Career</h2>
+            <div class="skills-grid">
+                <div class="skill-card">
+                    <div class="skill-icon">🤝</div>
+                    <h3>Emotional Intelligence</h3>
+                    <p>Build strong relationships and understand human needs</p>
+                </div>
+                <div class="skill-card">
+                    <div class="skill-icon">💡</div>
+                    <h3>Creative Problem Solving</h3>
+                    <p>Think outside the box and innovate solutions</p>
+                </div>
+                <div class="skill-card">
+                    <div class="skill-icon">🔄</div>
+                    <h3>Adaptability</h3>
+                    <p>Embrace change and learn continuously</p>
+                </div>
+                <div class="skill-card">
+                    <div class="skill-icon">🤖</div>
+                    <h3>AI Literacy</h3>
+                    <p>Understand and work alongside AI tools</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="section" id="factsSection">
+            <h2>Surprising AI Facts</h2>
+            <div class="fact-container">
+                <div class="fact-card">
+                    <h3>AI Impact Scale</h3>
+                    <p>By 2025, AI could replace jobs equivalent to the population of Estonia (1.3 million people)</p>
+                    <img src="https://kevelyn1.github.io/30DayMapChallenge2019/images/drainage-scaled.jpg"
+                        alt="Estonia map" style="width: 200px;">
+                </div>
+                <div class="fact-card">
+                    <h3>Economic Impact</h3>
+                    <p>AI could contribute $15.7 trillion to the global economy by 2030 - equivalent to the combined GDP
+                        of China and India</p>
+                </div>
+                <div class="fact-card">
+                    <h3>Workforce Revolution</h3>
+                    <p>85% of jobs that will exist in 2030 haven't been invented yet</p>
+                </div>
+            </div>
+            <button class="fact-button" onclick="showNextFact()">Show Another Fact</button>
+        </div>
+
+        <!-- <tableau-viz id='tableau-viz'
             src='https://10ay.online.tableau.com/t/vikramsinghrathod-e1c967dc0b/views/InfoViz/Avgremainssame'
             width='1728' height='952' hide-tabs toolbar='bottom'></tableau-viz>
         <tableau-viz id='tableau-viz'
@@ -179,7 +406,7 @@
             height='952' hide-tabs toolbar='bottom'></tableau-viz>
         <tableau-viz id='tableau-viz'
             src='https://10ay.online.tableau.com/t/vikramsinghrathod-e1c967dc0b/views/InfoViz-2/Sheet4' width='1728'
-            height='952' hide-tabs toolbar='bottom'></tableau-viz>
+            height='952' hide-tabs toolbar='bottom'></tableau-viz> -->
     </div>
     <script type='module'
         src='https://10ay.online.tableau.com/javascripts/api/tableau.embedding.3.latest.min.js'></script>
@@ -323,6 +550,69 @@
             };
 
             requestAnimationFrame(animate);
+        }
+        document.querySelector('.scroll-prompt').addEventListener('click', () => {
+            document.getElementById('choiceSection').scrollIntoView({ behavior: 'smooth' });
+        });
+
+        // Skills section functionality
+        function showSkills() {
+            document.getElementById('skillsSection').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // Facts section functionality
+        let currentFactIndex = 0;
+        const facts = document.querySelectorAll('.fact-card');
+
+        function showNextFact() {
+            facts[currentFactIndex].classList.remove('active');
+            currentFactIndex = (currentFactIndex + 1) % facts.length;
+            facts[currentFactIndex].classList.add('active');
+        }
+
+        // Show first fact initially
+        facts[0].classList.add('active');
+        let isScrolling;
+        let sections = document.querySelectorAll('.section, .hero-section');
+        let currentSection = 0;
+
+        window.addEventListener('wheel', (e) => {
+            clearTimeout(isScrolling);
+
+            isScrolling = setTimeout(() => {
+                if (e.deltaY > 0 && currentSection < sections.length - 1) {
+                    currentSection++;
+                } else if (e.deltaY < 0 && currentSection > 0) {
+                    currentSection--;
+                }
+
+                sections[currentSection].scrollIntoView({
+                    behavior: 'smooth'
+                });
+            }, 50);
+        }, { passive: true });
+
+        // Update currentSection when scrolling stops
+        window.addEventListener('scroll', () => {
+            clearTimeout(isScrolling);
+
+            isScrolling = setTimeout(() => {
+                currentSection = Array.from(sections).findIndex(section => {
+                    const rect = section.getBoundingClientRect();
+                    return rect.top >= 0 && rect.top <= window.innerHeight / 2;
+                });
+            }, 50);
+        });
+
+        // Modify existing scroll handlers to update currentSection
+        document.querySelector('.scroll-prompt').addEventListener('click', () => {
+            currentSection = 1;
+            document.getElementById('choiceSection').scrollIntoView({ behavior: 'smooth' });
+        });
+
+        function showSkills() {
+            currentSection = 2;
+            document.getElementById('skillsSection').scrollIntoView({ behavior: 'smooth' });
         }
     </script>
 </body>
